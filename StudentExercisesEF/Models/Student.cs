@@ -17,6 +17,13 @@ namespace StudentExercisesEF.Models
 
         public Cohort Cohort { get; set; }
 
+        // Add user Id to students
+        // Identity stores user's PKs as strings
+
+        public string UserId { get; set; }
+
+        public ApplicationUser User { get; set; }
+
         public List<StudentExercise> StudentExercises { get; set; } = new List<StudentExercise>();
 
     

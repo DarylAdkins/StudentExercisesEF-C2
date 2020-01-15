@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -13,17 +14,26 @@ namespace StudentExercisesEF.Controllers
 {
     public class StudentsController : Controller
     {
+        // Private field to store user manager
+        private readonly UserManager<ApplicationUser> _userManager;
+
         private readonly ApplicationDbContext _context;
 
-        public StudentsController(ApplicationDbContext context)
+        // Inject user manager into constructor
+        public StudentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
+
+        // Private method to get current user
+        private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
 
         // GET: Students
         public async Task<IActionResult> Index()
         {
-            List<Student> students = await _context.Student.Include(s => s.Cohort).ToListAsync();
+            var user = await GetCurrentUserAsync();
+            List<Student> students = await _context.Student.Include(s => s.Cohort).Where(s => s.User == user).ToListAsync();
             return View(students);
         }
 
@@ -74,6 +84,8 @@ namespace StudentExercisesEF.Controllers
         {
             if (ModelState.IsValid)
             {
+                var user = await GetCurrentUserAsync();
+                vm.Student.UserId = user.Id;
                 _context.Add(vm.Student);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));

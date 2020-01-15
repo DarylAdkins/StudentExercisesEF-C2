@@ -7,7 +7,7 @@ using StudentExercisesEF.Models;
 
 namespace StudentExercisesEF.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -18,5 +18,7 @@ namespace StudentExercisesEF.Data
         public DbSet<Cohort> Cohort { get; set; }
         public DbSet<Exercise> Exercise { get; set; }
         public DbSet<StudentExercise> StudentExercise { get; set; }
+
+        public DbSet<ApplicationUser> ApplicationUser { get; set; }
     }
 }
