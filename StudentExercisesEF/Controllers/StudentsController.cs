@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -30,24 +31,34 @@ namespace StudentExercisesEF.Controllers
         private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
 
         // GET: Students
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchQuery)
         {
-            var user = await GetCurrentUserAsync();
-            List<Student> students = await _context.Student.Include(s => s.Cohort).Where(s => s.User == user).ToListAsync();
+            
+            ApplicationUser loggedInUser = await GetCurrentUserAsync();
+            List<Student> students = await _context.Student.Include(s => s.Cohort).Where(s => s.User == loggedInUser).ToListAsync();
+
+            if(searchQuery != null)
+            {
+                students = students.Where(student => student.FirstName.Contains(searchQuery) || student.LastName.Contains(searchQuery)).ToList();
+            }
+
+
             return View(students);
         }
 
         // GET: Students/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
+            var user = await GetCurrentUserAsync();
 
             var student = await _context.Student
                 .Include(s => s.Cohort)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && m.User== user);
             if (student == null)
             {
                 return NotFound();
@@ -84,8 +95,8 @@ namespace StudentExercisesEF.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = await GetCurrentUserAsync();
-                vm.Student.UserId = user.Id;
+                var currentUser = await GetCurrentUserAsync();
+                vm.Student.UserId = currentUser.Id;
                 _context.Add(vm.Student);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -131,6 +142,8 @@ namespace StudentExercisesEF.Controllers
             {
                 try
                 {
+                    var currentUser = await GetCurrentUserAsync();
+                    student.UserId = currentUser.Id;
                     _context.Update(student);
                     await _context.SaveChangesAsync();
                 }

@@ -5,7 +5,9 @@
 }
 
 <h1>Index</h1>
-
+<form asp-controller="Students" asp-action="Index" class="form-control">
+    <input name="searchQuery" placeholder="Search for Students by First or Last Name"/>
+</form>
 <p>
     <a asp-action="Create">Create New</a>
 </p>
